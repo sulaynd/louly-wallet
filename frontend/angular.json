@@ -19,7 +19,9 @@
             "polyfills": [
               "zone.js"
             ],
-            "assets": [],
+            "assets": [
+              "src/assets"
+            ],
             "styles": [
               "src/styles.css"
             ],
@@ -51,7 +53,9 @@
               "zone.js/testing"
             ],
             "tsConfig": "tsconfig.spec.json",
-            "assets": [],
+            "assets": [
+              "src/assets"
+            ],
             "styles": [
               "src/styles.css"
             ],
