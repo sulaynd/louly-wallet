@@ -38,6 +38,10 @@ services:
       # Free key from https://www.exchangerate-api.com/ — set in your shell or a .env file.
       # Leave unset to disable: XOF then just stays on whatever rate is on file.
       EXCHANGERATE_API_KEY: ${EXCHANGERATE_API_KEY:-}
+      # Comma-separated list — must include every origin the frontend is actually accessed from
+      # (e.g. your server's public IP or domain), or real browsers get blocked by CORS even
+      # though curl/direct API calls work fine (curl doesn't enforce CORS at all).
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:4200,http://localhost:4201}
     ports:
       - "8080:8080"
 
