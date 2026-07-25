@@ -26,7 +26,7 @@ const TRANSLATIONS: Dict = {
   'send.status.SENT': { en: 'Sent', fr: 'Transmis' },
   'send.status.DELIVERED': { en: 'Delivered', fr: 'Livré' },
   'send.payFrom': { en: 'Pay from', fr: 'Payer depuis' },
-  'send.depotAccount': { en: 'Deposit account', fr: 'Compte dépôt Louly Express' },
+  'send.depotAccount': { en: 'Deposit account', fr: 'Compte dépôt' },
   'send.addCard': { en: 'Add a card', fr: 'Ajouter une carte' },
   'send.cardHolderName': { en: 'Cardholder name', fr: 'Nom du titulaire' },
   'send.cardNumber': { en: 'Card number', fr: 'Numéro de carte' },
