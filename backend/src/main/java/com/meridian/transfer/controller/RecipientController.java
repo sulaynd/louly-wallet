@@ -2,10 +2,12 @@ package com.meridian.transfer.controller;
 
 import com.meridian.transfer.dto.CreateRecipientRequest;
 import com.meridian.transfer.dto.RecipientDto;
+import com.meridian.transfer.model.AppUser;
 import com.meridian.transfer.model.Country;
 import com.meridian.transfer.model.ReceptionMode;
 import com.meridian.transfer.model.Recipient;
 import com.meridian.transfer.model.RecipientType;
+import com.meridian.transfer.repository.AppUserRepository;
 import com.meridian.transfer.repository.CountryRepository;
 import com.meridian.transfer.repository.ReceptionModeRepository;
 import com.meridian.transfer.repository.RecipientRepository;
@@ -31,15 +33,18 @@ public class RecipientController {
     private final PhoneCountryResolver phoneCountryResolver;
     private final ReceptionModeRepository receptionModeRepository;
     private final CountryRepository countryRepository;
+    private final AppUserRepository appUserRepository;
 
     public RecipientController(RecipientRepository recipientRepository,
                                 PhoneCountryResolver phoneCountryResolver,
                                 ReceptionModeRepository receptionModeRepository,
-                                CountryRepository countryRepository) {
+                                CountryRepository countryRepository,
+                                AppUserRepository appUserRepository) {
         this.recipientRepository = recipientRepository;
         this.phoneCountryResolver = phoneCountryResolver;
         this.receptionModeRepository = receptionModeRepository;
         this.countryRepository = countryRepository;
+        this.appUserRepository = appUserRepository;
     }
 
     /** Only the authenticated user's own recipients — this is now a private directory per account. */
@@ -71,13 +76,31 @@ public class RecipientController {
         recipient.setDeliveryPartner(request.deliveryPartner());
         recipient.setAddress(request.address());
         recipient.setCity(request.city());
-        recipient.setType(info.isCanadian() ? RecipientType.NATIONAL : RecipientType.INTERNATIONAL);
+        recipient.setType(recipientTypeFor(info.currencyCode(), principal.getName()));
         recipient.setFlagEmoji(info.flagEmoji());
         recipient.setCurrencyCode(info.currencyCode());
         recipient.setOwnerUsername(principal.getName());
 
         Recipient saved = recipientRepository.save(recipient);
         return ResponseEntity.status(HttpStatus.CREATED).body(RecipientDto.from(saved));
+    }
+
+    /**
+     * NATIONAL if the recipient's currency matches the sender's own account currency, regardless
+     * of either party's country — a Senegalese sender adding a Senegalese recipient is NATIONAL,
+     * not INTERNATIONAL just because neither is Canadian. Matches the same reasoning already used
+     * in TransferService for the sent/received currency comparison. Falls back to INTERNATIONAL
+     * if the sender's own currency can't be resolved (shouldn't normally happen).
+     */
+    private RecipientType recipientTypeFor(String recipientCurrencyCode, String ownerUsername) {
+        String senderCurrency = appUserRepository.findByUsername(ownerUsername)
+                .map(AppUser::getCountry)
+                .flatMap(countryRepository::findByName)
+                .map(Country::getCurrencyCode)
+                .orElse(null);
+        return senderCurrency != null && senderCurrency.equalsIgnoreCase(recipientCurrencyCode)
+                ? RecipientType.NATIONAL
+                : RecipientType.INTERNATIONAL;
     }
 
     /**
