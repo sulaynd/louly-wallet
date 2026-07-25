@@ -1,0 +1,74 @@
+<!-- LIST VIEW -->
+<ng-container *ngIf="view === 'list'">
+  <div class="header">
+    <h1>{{ i18n.t('track.title') }}</h1>
+    <div class="iconbtn"><i class="ti ti-share"></i></div>
+  </div>
+
+  <p class="empty-note" *ngIf="historyLoading">{{ i18n.t('track.loading') }}</p>
+  <p class="empty-note" *ngIf="!historyLoading && historyError">{{ historyError }}</p>
+  <p class="empty-note" *ngIf="!historyLoading && !historyError && history.length === 0">{{ i18n.t('track.empty') }}</p>
+
+  <button
+    class="history-row"
+    *ngFor="let t of history"
+    (click)="openDetail(t.id)"
+  >
+    <span class="rflag">{{ t.recipient.flagEmoji }}</span>
+    <span class="rinfo">
+      <span class="n">{{ t.recipient.name }}</span>
+      <span class="d">{{ t.createdAt | date: 'mediumDate' }}</span>
+    </span>
+    <span class="history-amount">
+      <span class="val">{{ t.amountReceived | number: '1.' + decimalsForCurrency(t.targetCurrency) + '-' + decimalsForCurrency(t.targetCurrency) }} {{ t.targetCurrency }}</span>
+      <span class="status" [class.pending]="t.events[t.events.length - 1].pending">
+        {{ t.events[t.events.length - 1].pending ? i18n.t('track.status.pending') : i18n.t('track.status.done') }}
+      </span>
+    </span>
+  </button>
+
+  <div class="total-sent-block" *ngIf="history.length > 0">
+    <span class="total-sent-label">{{ i18n.t('track.totalSent') }}</span>
+    <span class="total-sent-value">{{ totalSent | currency: totalSentCurrency }}</span>
+  </div>
+</ng-container>
+
+<!-- DETAIL VIEW -->
+<ng-container *ngIf="view === 'detail'">
+  <div class="header">
+    <button class="iconbtn" (click)="backToList()" [attr.aria-label]="i18n.t('track.back')">
+      <i class="ti ti-arrow-left"></i>
+    </button>
+    <h1>{{ i18n.t('track.title') }}</h1>
+    <div class="iconbtn"><i class="ti ti-share"></i></div>
+  </div>
+
+  <p class="empty-note" *ngIf="detailLoading">{{ i18n.t('track.loading') }}</p>
+  <p class="empty-note" *ngIf="!detailLoading && detailError">{{ detailError }}</p>
+
+  <ng-container *ngIf="!detailLoading && transfer as t">
+    <div class="transfer-summary">
+      <div class="route-flags">
+        <span class="flag-sm">{{ t.recipient.flagEmoji }}</span>
+      </div>
+      <p class="amt">{{ t.amountReceived | number: '1.' + decimalsForCurrency(t.targetCurrency) + '-' + decimalsForCurrency(t.targetCurrency) }} {{ t.targetCurrency }}</p>
+      <p class="to">{{ i18n.t('track.to') }} {{ t.recipient.name }} · {{ t.recipient.phoneNumber }}</p>
+      <span class="eta-pill">
+        <i class="ti ti-clock"></i>
+        {{ t.mode === 'INTERNATIONAL' ? i18n.t('track.eta.international') : i18n.t('track.eta.national') }}
+      </span>
+    </div>
+
+    <div class="timeline">
+      <div class="tl-item" *ngFor="let step of t.events; last as isLast" [class.no-line]="isLast">
+        <div class="tl-dot" [class.pending]="step.pending">
+          <i class="ti" [ngClass]="step.pending ? 'ti-point' : 'ti-check'"></i>
+        </div>
+        <div class="tl-text">
+          <p class="t">{{ eventTitle(step, t) }}</p>
+          <p class="s">{{ eventSubtitle(step, t) }}</p>
+        </div>
+      </div>
+    </div>
+  </ng-container>
+</ng-container>

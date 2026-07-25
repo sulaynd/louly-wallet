@@ -1,0 +1,42 @@
+<div class="device">
+  <div class="screen">
+    <div class="statusbar">
+      <span>9:41</span>
+      <div class="status-right">
+        <button class="lang-toggle" (click)="i18n.toggle()">{{ i18n.lang === 'en' ? 'FR' : 'EN' }}</button>
+        <button class="lang-toggle" *ngIf="auth.isAuthenticated" (click)="logout()">
+          <i class="ti ti-logout"></i>
+        </button>
+        <span><i class="ti ti-wifi"></i> <i class="ti ti-battery-4"></i></span>
+      </div>
+    </div>
+
+    <div class="content" *ngIf="!auth.isAuthenticated">
+      <app-auth></app-auth>
+    </div>
+
+    <ng-container *ngIf="auth.isAuthenticated">
+      <div class="content">
+        <app-send *ngIf="activeView === 'send'" (transferSent)="onTransferSent($event)" (addBeneficiaryRequested)="goToAddBeneficiary()"></app-send>
+        <app-recipients *ngIf="activeView === 'recipients'" [autoOpenForm]="openRecipientFormOnNav"></app-recipients>
+        <app-track *ngIf="activeView === 'track'" [transferId]="lastTransferId"></app-track>
+      </div>
+
+      <div class="tabbar">
+        <button
+          *ngFor="let tab of tabs"
+          class="tab"
+          [class.active]="activeView === tab.view"
+          (click)="setView(tab.view)"
+        >
+          <i class="ti" [ngClass]="tab.icon"></i>
+          {{ i18n.t(tab.labelKey) }}
+        </button>
+        <button class="tab" [class.active]="false" (click)="setView('send')">
+          <i class="ti ti-user"></i>
+          {{ i18n.t('tab.profile') }}
+        </button>
+      </div>
+    </ng-container>
+  </div>
+</div>

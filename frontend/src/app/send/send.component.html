@@ -1,0 +1,289 @@
+<ng-container *ngIf="!completedTransfer">
+
+  <!-- STEP 1: form (recipient + amount entry) -->
+  <ng-container *ngIf="!reviewMode">
+    <div class="header">
+      <h1>{{ i18n.t('send.title') }}</h1>
+      <div class="iconbtn"><i class="ti ti-history"></i></div>
+    </div>
+
+    <!-- Collapsed state: tap to open the contact picker -->
+    <div class="beneficiary-field" *ngIf="!selectedRecipient && !showContactPicker" (click)="openContactPicker()">
+      <span>{{ i18n.t('send.beneficiaryName') }}</span>
+      <button class="add-beneficiary-btn" (click)="openContactPicker()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="9" cy="8" r="3.2"></circle>
+          <path d="M3.5 19c0-3.2 2.5-5.6 5.5-5.6s5.5 2.4 5.5 5.6"></path>
+          <path d="M17.5 7.5v5"></path>
+          <path d="M15 10h5"></path>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Recent transaction history — shown while no recipient is being picked -->
+    <div class="tx-history" *ngIf="!selectedRecipient && !showContactPicker && recentTransfers.length > 0">
+      <div class="tx-history-header">
+        <p class="tx-history-title">{{ i18n.t('send.transactionHistory') }}</p>
+        <button class="tx-see-more" *ngIf="!showAllTransactions" (click)="goToAllTransactions()">{{ i18n.t('send.seeMore') }}</button>
+      </div>
+      <div class="tx-row" *ngFor="let t of displayedTransfers">
+        <div class="tx-line">
+          <span class="tx-name">{{ t.recipient.name }}</span>
+          <span class="tx-amount">{{ t.totalCharged | currency: t.sourceCurrency }}</span>
+        </div>
+        <div class="tx-line tx-line-sub">
+          <span class="tx-date">{{ t.createdAt | date: 'd MMM' }}</span>
+          <span class="tx-status">{{ statusLabel(t.status) }}</span>
+          <span class="tx-amount-sub">{{ t.amountReceived | number: '1.' + decimalsForCurrency(t.targetCurrency) + '-' + decimalsForCurrency(t.targetCurrency) }} {{ t.targetCurrency }}</span>
+        </div>
+      </div>
+      <button class="view-all-btn" *ngIf="!showAllTransactions" (click)="goToAllTransactions()">{{ i18n.t('send.viewAllTransactions') }}</button>
+
+      <div class="total-sent-block" *ngIf="showAllTransactions">
+        <span class="total-sent-label">{{ i18n.t('send.totalSent') }}</span>
+        <span class="total-sent-value">{{ totalSent | currency: sourceCurrency }}</span>
+      </div>
+    </div>
+
+    <!-- Contact search: pick a recipient from the directory to get their phone number -->
+    <div class="contact-search" *ngIf="!selectedRecipient && showContactPicker">
+      <button class="picker-heading-link" (click)="goToAddBeneficiary()">
+        <i class="ti ti-plus"></i> {{ i18n.t('send.addBeneficiary') }}
+      </button>
+      <div class="search-box">
+        <i class="ti ti-search"></i>
+        <input type="text" [(ngModel)]="searchTerm" name="search" [placeholder]="i18n.t('send.searchPlaceholder')" />
+      </div>
+
+      <p class="empty-note" *ngIf="!recipientsLoaded">{{ i18n.t('send.loadingRecipients') }}</p>
+
+      <ng-container *ngIf="recipientsLoaded">
+        <button class="contact-row" *ngFor="let r of filteredRecipients" (click)="selectRecipient(r)">
+          <span class="rflag">{{ r.flagEmoji }}</span>
+          <span class="rinfo">
+            <span class="n">{{ r.name }}</span>
+            <span class="d">{{ r.phoneNumber }}</span>
+          </span>
+          <i class="ti ti-chevron-right"></i>
+        </button>
+        <p class="empty-note" *ngIf="filteredRecipients.length === 0">{{ i18n.t('send.noContactsFound') }}</p>
+      </ng-container>
+    </div>
+
+    <!-- Selected recipient + amount entry -->
+    <div class="route-card" *ngIf="selectedRecipient as recipient">
+      <div class="selected-row">
+        <div class="flagbox">
+          <div class="flag">{{ recipient.flagEmoji }}</div>
+          <div>
+            <p class="ctry">{{ recipient.phoneNumber }}</p>
+            <p class="sub">{{ recipient.name }}</p>
+          </div>
+        </div>
+        <button class="clear-btn" (click)="clearRecipient()" [attr.aria-label]="i18n.t('send.change')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M6 6l12 12"></path>
+            <path d="M18 6l-12 12"></path>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Which of the sender's own accounts funds this transfer -->
+      <div class="account-picker" *ngIf="accounts.length > 0">
+        <span class="account-picker-label">{{ i18n.t('send.payFrom') }}</span>
+        <button
+          class="account-row"
+          *ngFor="let a of accounts"
+          [class.selected]="selectedAccount?.id === a.id"
+          (click)="selectAccount(a)"
+        >
+          <i class="ti" [ngClass]="a.type === 'DEPOT' ? 'ti-wallet' : 'ti-credit-card'"></i>
+          <span class="account-row-text">
+            <span class="account-row-label">{{ a.type === 'DEPOT' ? i18n.t('send.depotAccount') : a.label }}</span>
+            <span class="account-row-balance" *ngIf="a.type === 'DEPOT' && a.balance !== null">{{ a.balance | currency: (a.currencyCode ?? sourceCurrency) }}</span>
+          </span>
+          <i class="ti ti-circle-check account-row-check" *ngIf="selectedAccount?.id === a.id"></i>
+        </button>
+
+        <button class="add-bank-link" *ngIf="!showAddCardForm" (click)="openAddCardForm()">
+          <i class="ti ti-plus"></i> {{ i18n.t('send.addCard') }}
+        </button>
+
+        <div class="add-bank-form" *ngIf="showAddCardForm">
+          <select [(ngModel)]="newCardCountryId" name="newCardCountryId" class="card-country-select">
+            <option *ngFor="let c of countries" [ngValue]="c.id">{{ c.flagEmoji }} {{ c.name }}</option>
+          </select>
+          <input type="text" [(ngModel)]="newCardHolderName" name="newCardHolderName" [placeholder]="i18n.t('send.cardHolderName')" />
+          <input type="text" inputmode="numeric" maxlength="23" [(ngModel)]="newCardNumber" name="newCardNumber"
+                 (input)="onCardNumberInput()" [placeholder]="i18n.t('send.cardNumber')" />
+          <span class="field-group-label">{{ i18n.t('send.expiryDate') }}</span>
+          <div class="bank-fields-row">
+            <input type="text" inputmode="numeric" maxlength="2" [(ngModel)]="newCardExpiryMonth" name="newCardExpiryMonth"
+                   [placeholder]="i18n.t('send.expiryMonth')" />
+            <input type="text" inputmode="numeric" maxlength="4" [(ngModel)]="newCardExpiryYear" name="newCardExpiryYear"
+                   [placeholder]="i18n.t('send.expiryYear')" />
+            <input type="text" inputmode="numeric" maxlength="4" [(ngModel)]="newCardCvc" name="newCardCvc"
+                   [placeholder]="i18n.t('send.cvc')" />
+          </div>
+          <div class="add-bank-actions">
+            <button class="continue-btn small" [disabled]="savingCard || !cardFormValid" (click)="addCard()">
+              {{ savingCard ? i18n.t('accounting.settling') : i18n.t('send.save') }}
+            </button>
+            <button class="secondary-btn small" [disabled]="savingCard" (click)="cancelAddCardForm()">
+              {{ i18n.t('recipients.form.cancel') }}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="amount-block">
+        <span class="cur">{{ i18n.t('send.youSend') }}</span>
+        <div class="amount-input-wrap">
+          <input class="amount-input" [class.invalid]="!amountValid" type="number" min="0" step="0.01"
+                 [(ngModel)]="amount" (ngModelChange)="onAmountSentChange()" (focus)="onAmountSentFocus()" name="amountSent" />
+          <span class="currency-suffix">{{ sourceCurrency }}</span>
+        </div>
+      </div>
+      <div class="amount-block">
+        <span class="cur">{{ i18n.t('send.theyReceive') }}</span>
+        <div class="amount-input-wrap">
+          <input class="amount-input" [class.invalid]="!amountValid" type="number" min="0" [step]="receivedDecimals === 0 ? 1 : 0.01"
+                 [(ngModel)]="receivedAmount" (ngModelChange)="onAmountReceivedChange()" (focus)="onAmountReceivedFocus()" name="amountReceived" />
+          <span class="currency-suffix">{{ recipient.currencyCode }}</span>
+        </div>
+      </div>
+
+      <p class="field-error" *ngIf="!amountValid"><i class="ti ti-alert-triangle"></i> {{ amountErrorMessage }}</p>
+
+      <div class="rate-strip" *ngIf="isInternational">
+        <i class="ti ti-refresh"></i> 1 {{ sourceCurrency }} = {{ rate }} {{ recipient.currencyCode }}
+      </div>
+
+      <div class="fee-row">
+        <span>{{ i18n.t('send.fee') }}</span>
+        <span>{{ fee | currency: sourceCurrency }}</span>
+      </div>
+      <div class="fee-row total">
+        <span>{{ i18n.t('send.total') }}</span>
+        <span>{{ total | currency: sourceCurrency }}</span>
+      </div>
+    </div>
+
+    <button class="continue-btn" *ngIf="selectedRecipient" [disabled]="!amountValid || !selectedAccount" (click)="goToReview()">
+      <i class="ti ti-arrow-right"></i>
+      {{ i18n.t('send.continue') }}
+    </button>
+  </ng-container>
+
+  <!-- STEP 2: recap — nothing sent yet -->
+  <ng-container *ngIf="reviewMode && selectedRecipient as recipient">
+    <div class="header">
+      <h1>{{ i18n.t('send.review.title') }}</h1>
+      <div class="iconbtn"></div>
+    </div>
+    <p class="confirm-subtitle" style="margin: -4px 0 16px;">{{ i18n.t('send.review.subtitle') }}</p>
+
+    <div class="route-card">
+      <div class="selected-row">
+        <div class="flagbox">
+          <div class="flag">{{ recipient.flagEmoji }}</div>
+          <div>
+            <p class="ctry">{{ recipient.phoneNumber }}</p>
+            <p class="sub">{{ recipient.name }}</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="amount-block" *ngIf="selectedAccount">
+        <span class="cur">{{ i18n.t('send.payFrom') }}</span>
+        <span class="val">{{ selectedAccount.type === 'DEPOT' ? i18n.t('send.depotAccount') : selectedAccount.label }}</span>
+      </div>
+      <div class="amount-block">
+        <span class="cur">{{ i18n.t('send.youSend') }}</span>
+        <span class="val">{{ amount | currency: sourceCurrency }}</span>
+      </div>
+      <div class="amount-block">
+        <span class="cur">{{ i18n.t('send.theyReceive') }}</span>
+        <span class="val">{{ receivedAmount | number: '1.' + receivedDecimals + '-' + receivedDecimals }} {{ recipient.currencyCode }}</span>
+      </div>
+
+      <div class="rate-strip" *ngIf="isInternational">
+        <i class="ti ti-refresh"></i> 1 {{ sourceCurrency }} = {{ rate }} {{ recipient.currencyCode }}
+      </div>
+
+      <div class="fee-row">
+        <span>{{ i18n.t('send.fee') }}</span>
+        <span>{{ fee | currency: sourceCurrency }}</span>
+      </div>
+      <div class="fee-row total">
+        <span>{{ i18n.t('send.total') }}</span>
+        <span>{{ total | currency: sourceCurrency }}</span>
+      </div>
+    </div>
+
+    <p class="error-note" *ngIf="errorMessage">{{ errorMessage }}</p>
+
+    <button class="continue-btn" [disabled]="sending" (click)="confirmAndSend()">
+      <i class="ti" [ngClass]="sending ? 'ti-loader-2' : 'ti-check'"></i>
+      {{ sending ? i18n.t('send.review.confirming') : i18n.t('send.review.confirm') }}
+    </button>
+    <button class="secondary-btn" [disabled]="sending" (click)="editTransfer()">
+      {{ i18n.t('send.review.edit') }}
+    </button>
+  </ng-container>
+
+</ng-container>
+
+<ng-container *ngIf="completedTransfer as t">
+  <div class="confirm-wrap">
+    <div class="success-icon"><i class="ti ti-check"></i></div>
+    <h1>{{ i18n.t('send.confirm.title') }}</h1>
+    <p class="confirm-subtitle">{{ i18n.t('send.confirm.subtitle') }}</p>
+  </div>
+
+  <div class="route-card">
+    <div class="selected-row">
+      <div class="flagbox">
+        <div class="flag">{{ t.recipient.flagEmoji }}</div>
+        <div>
+          <p class="ctry">{{ t.recipient.phoneNumber }}</p>
+          <p class="sub">{{ t.recipient.name }}</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="amount-block" *ngIf="t.sourceAccountLabel">
+      <span class="cur">{{ i18n.t('send.payFrom') }}</span>
+      <span class="val">{{ t.sourceAccountType === 'DEPOT' ? i18n.t('send.depotAccount') : t.sourceAccountLabel }}</span>
+    </div>
+    <div class="amount-block">
+      <span class="cur">{{ i18n.t('send.confirm.sentLabel') }}</span>
+      <span class="val">{{ t.amountSent | currency: t.sourceCurrency }}</span>
+    </div>
+    <div class="amount-block">
+      <span class="cur">{{ i18n.t('send.confirm.receivedLabel') }}</span>
+      <span class="val">{{ t.amountReceived | number: '1.' + decimalsForCurrency(t.targetCurrency) + '-' + decimalsForCurrency(t.targetCurrency) }} {{ t.targetCurrency }}</span>
+    </div>
+
+    <div class="fee-row">
+      <span>{{ i18n.t('send.fee') }}</span>
+      <span>{{ t.fee | currency: t.sourceCurrency }}</span>
+    </div>
+    <div class="fee-row total">
+      <span>{{ i18n.t('send.total') }}</span>
+      <span>{{ t.totalCharged | currency: t.sourceCurrency }}</span>
+    </div>
+    <div class="fee-row">
+      <span>{{ i18n.t('send.confirm.reference') }}</span>
+      <span>#{{ t.id }}</span>
+    </div>
+  </div>
+
+  <button class="continue-btn" (click)="goToTracking()">
+    <i class="ti ti-map-pin"></i>
+    {{ i18n.t('send.confirm.track') }}
+  </button>
+  <button class="secondary-btn" (click)="sendAnother()">
+    {{ i18n.t('send.confirm.sendAnother') }}
+  </button>
+</ng-container>

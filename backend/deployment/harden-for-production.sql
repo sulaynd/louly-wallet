@@ -1,0 +1,32 @@
+-- Run this ONCE, manually, directly against the production database — after Flyway migrations
+-- have run, before opening the app to real users. This is intentionally NOT a Flyway migration:
+-- migrations run identically in every environment (dev, staging, prod), and demo/support/agent
+-- accounts are genuinely useful to keep around in dev — they should just never exist with a
+-- known password in production.
+--
+-- Usage:
+--   psql "$DATABASE_URL" -f harden-for-production.sql
+--
+-- Generates a fresh random password for each demo account (bcrypt hash) and prints the plaintext
+-- once to the console — save it somewhere safe (a password manager), it is not recoverable
+-- afterward. If you don't actually need these accounts in production at all, delete them instead
+-- (see the commented-out block at the bottom).
+
+-- These are placeholders — replace each with a real bcrypt hash generated locally via
+-- generate-bcrypt-hash.py (in this same folder), never typed into an online generator or
+-- pasted anywhere else.
+-- UPDATE app_users SET password_hash = '$2a$10$REPLACE_WITH_REAL_BCRYPT_HASH' WHERE username = 'demo';
+-- UPDATE app_users SET password_hash = '$2a$10$REPLACE_WITH_REAL_BCRYPT_HASH' WHERE username = 'support';
+-- UPDATE app_users SET password_hash = '$2a$10$REPLACE_WITH_REAL_BCRYPT_HASH' WHERE username = 'agent';
+
+-- Simpler and safer for most production launches: just remove the demo/test accounts entirely.
+-- Uncomment if you don't need demo/support/agent logins in production at all.
+-- DELETE FROM account_movements WHERE account_id IN (
+--     SELECT id FROM user_accounts WHERE owner_user_id IN (
+--         SELECT id FROM app_users WHERE username IN ('demo', 'support', 'agent')
+--     )
+-- );
+-- DELETE FROM user_accounts WHERE owner_user_id IN (
+--     SELECT id FROM app_users WHERE username IN ('demo', 'support', 'agent')
+-- );
+-- DELETE FROM app_users WHERE username IN ('demo', 'support', 'agent');

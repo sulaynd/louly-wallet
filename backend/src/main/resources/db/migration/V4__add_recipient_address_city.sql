@@ -1,0 +1,3 @@
+ALTER TABLE recipients
+    ADD COLUMN address VARCHAR(255),
+    ADD COLUMN city VARCHAR(255);

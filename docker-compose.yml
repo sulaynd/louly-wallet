@@ -1,0 +1,54 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: meridian-postgres
+    environment:
+      POSTGRES_DB: meridian
+      POSTGRES_USER: meridian
+      POSTGRES_PASSWORD: meridian
+    ports:
+      - "5433:5432"
+    volumes:
+      - meridian_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U meridian"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build:
+      context: ./backend
+    container_name: meridian-backend
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      # Overrides application.yml — inside the Docker network, Postgres is reachable by
+      # service name, not localhost.
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/meridian
+      SPRING_DATASOURCE_USERNAME: meridian
+      SPRING_DATASOURCE_PASSWORD: meridian
+      # Set a real secret here (or via a .env file) for anything beyond local use.
+      JWT_SECRET: ${JWT_SECRET:-change-this-dev-only-secret-please-1234567890}
+      # Allows a migration file that's re-added after being temporarily missing (e.g. V34 earlier
+      # in development) to still apply even though a later version already ran — safe for this
+      # project since migrations here are simple, independent data/schema changes.
+      SPRING_FLYWAY_OUT_OF_ORDER: "true"
+      # Free key from https://www.exchangerate-api.com/ — set in your shell or a .env file.
+      # Leave unset to disable: XOF then just stays on whatever rate is on file.
+      EXCHANGERATE_API_KEY: ${EXCHANGERATE_API_KEY:-}
+    ports:
+      - "8080:8080"
+
+  frontend:
+    build:
+      context: ./frontend
+    container_name: meridian-frontend
+    depends_on:
+      - backend
+    ports:
+      - "4200:80"
+
+volumes:
+  meridian_pgdata:

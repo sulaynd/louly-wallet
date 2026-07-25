@@ -1,0 +1,2 @@
+ALTER TABLE transfers RENAME COLUMN receiving_partner_commission_amount TO receiving_reception_mode_commission_amount;
+ALTER TABLE transfers RENAME COLUMN receiving_partner_commission_currency TO receiving_reception_mode_commission_currency;

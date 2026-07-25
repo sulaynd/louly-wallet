@@ -1,0 +1,69 @@
+<div class="header">
+  <h1>{{ i18n.t('accounting.title') }}</h1>
+  <div class="iconbtn"><i class="ti ti-report-money"></i></div>
+</div>
+
+<p class="empty-note" *ngIf="loading">{{ i18n.t('accounting.loading') }}</p>
+
+<ng-container *ngIf="!loading">
+  <!-- KPIs -->
+  <div class="kpi-row" *ngIf="summary">
+    <div class="kpi-card">
+      <span class="kpi-value">{{ summary.transactionCount }}</span>
+      <span class="kpi-label">{{ i18n.t('accounting.transactions') }}</span>
+    </div>
+    <div class="kpi-card">
+      <span class="kpi-value">{{ summary.totalPlatformRevenueCAD | currency: 'CAD' }}</span>
+      <span class="kpi-label">{{ i18n.t('accounting.revenue') }}</span>
+    </div>
+  </div>
+
+  <div class="expense-row" *ngIf="summary && summary.receptionModeCommissionExpenseByCurrency.length > 0">
+    <span class="expense-label">{{ i18n.t('accounting.commissionExpense') }}</span>
+    <span class="expense-value" *ngFor="let c of summary.receptionModeCommissionExpenseByCurrency">
+      {{ c.amount | number: '1.2-2' }} {{ c.currency }}
+    </span>
+  </div>
+
+  <!-- ReceptionMode balances -->
+  <p class="section-title first">{{ i18n.t('accounting.balances') }}</p>
+  <p class="empty-note" *ngIf="balances.length === 0">{{ i18n.t('accounting.noBalances') }}</p>
+
+  <div class="balance-row" *ngFor="let b of balances">
+    <div class="balance-info">
+      <span class="balance-name">{{ b.receptionModeName }}</span>
+      <span class="balance-amount" [class.settled]="b.currentBalance <= 0">
+        {{ b.currentBalance | number: '1.2-2' }} {{ b.currency }}
+      </span>
+    </div>
+    <button class="settle-btn" *ngIf="b.currentBalance > 0 && settlingReceptionModeId !== b.receptionModeId" (click)="openSettle(b)">
+      {{ i18n.t('accounting.settle') }}
+    </button>
+
+    <div class="settle-form" *ngIf="settlingReceptionModeId === b.receptionModeId">
+      <input type="number" [(ngModel)]="settleAmount" name="settleAmount" />
+      <input type="text" [(ngModel)]="settleNote" name="settleNote" [placeholder]="i18n.t('accounting.notePlaceholder')" />
+      <p class="error-note" *ngIf="errorMessage">{{ errorMessage }}</p>
+      <div class="settle-actions">
+        <button class="continue-btn" [disabled]="saving" (click)="confirmSettle(b)">
+          {{ saving ? i18n.t('accounting.settling') : i18n.t('accounting.confirmSettle') }}
+        </button>
+        <button class="secondary-btn" [disabled]="saving" (click)="cancelSettle()">{{ i18n.t('recipients.form.cancel') }}</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Recent ledger -->
+  <p class="section-title">{{ i18n.t('accounting.ledger') }}</p>
+  <p class="empty-note" *ngIf="ledger.length === 0">{{ i18n.t('accounting.noLedger') }}</p>
+  <div class="ledger-row" *ngFor="let e of ledger">
+    <span class="ledger-icon" [class.settlement]="e.type === 'SETTLEMENT_PAYMENT'">
+      <i class="ti" [ngClass]="e.type === 'SETTLEMENT_PAYMENT' ? 'ti-arrow-up-right' : 'ti-arrow-down-left'"></i>
+    </span>
+    <span class="ledger-text">
+      <span class="ledger-reception-mode">{{ e.receptionModeName }}</span>
+      <span class="ledger-date">{{ e.createdAt | date: 'medium' }}</span>
+    </span>
+    <span class="ledger-amount">{{ e.amount | number: '1.2-2' }} {{ e.currency }}</span>
+  </div>
+</ng-container>

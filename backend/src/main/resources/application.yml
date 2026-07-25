@@ -1,0 +1,46 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: transfer-service
+
+  datasource:
+    url: jdbc:postgresql://localhost:5433/meridian
+    username: meridian
+    password: meridian
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      # Flyway now owns the schema (see db/migration). Hibernate only checks that the
+      # entities match what Flyway created — it never modifies the schema itself anymore.
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+    open-in-view: false
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+
+exchange:
+  rate:
+    api-base-url: https://api.frankfurter.app
+    secondary-api-base-url: https://v6.exchangerate-api.com/v6
+    # Free key from https://www.exchangerate-api.com/ — set via env var, never commit a real one.
+    # Leave empty to disable: currencies like XOF then stay on whatever's on file (MANUAL/SEED).
+    secondary-api-key: ${EXCHANGERATE_API_KEY:}
+
+transfer:
+  # Only used to seed the transfer_limits table the very first time (fresh database).
+  # After that, the real cap lives in the DB and is editable via /api/admin/limits.
+  default-max-amount: 5000.00
+
+jwt:
+  # In a real deployment, set this via an environment variable — never commit a real secret.
+  # Must be reasonably long (HS256 needs at least 32 bytes).
+  secret: ${JWT_SECRET:change-this-dev-only-secret-please-1234567890}
+  expiration-ms: 86400000 # 24 hours

@@ -1,0 +1,51 @@
+<div class="auth-wrap">
+  <div class="brand">
+    <div class="brand-icon"><i class="ti ti-send"></i></div>
+    <h1>Meridian</h1>
+  </div>
+
+  <div class="segment">
+    <button [class.active]="mode === 'login'" (click)="setMode('login')">{{ i18n.t('auth.login') }}</button>
+    <button [class.active]="mode === 'register'" (click)="setMode('register')">{{ i18n.t('auth.register') }}</button>
+  </div>
+
+  <div class="field">
+    <label>{{ i18n.t('auth.username') }}</label>
+    <input type="text" [(ngModel)]="username" name="username" autocomplete="username" />
+  </div>
+
+  <div class="field" *ngIf="mode === 'register'">
+    <label>{{ i18n.t('auth.displayName') }}</label>
+    <input type="text" [(ngModel)]="displayName" name="displayName" />
+  </div>
+
+  <div class="field" *ngIf="mode === 'register'">
+    <label>{{ i18n.t('auth.country') }}</label>
+    <select [(ngModel)]="country" name="country">
+      <option *ngFor="let c of countries" [value]="c.name">{{ c.flagEmoji }} {{ c.name }}</option>
+    </select>
+  </div>
+
+  <div class="field" *ngIf="mode === 'register'">
+    <label>{{ i18n.t('auth.phoneNumber') }}</label>
+    <div class="phone-input-wrap">
+      <span class="calling-code">{{ callingCode }}</span>
+      <input type="tel" [(ngModel)]="localPhone" name="localPhone" placeholder="514 555 0134" />
+    </div>
+  </div>
+
+  <div class="field">
+    <label>{{ i18n.t('auth.password') }}</label>
+    <input type="password" [(ngModel)]="password" name="password" autocomplete="current-password" />
+  </div>
+
+  <p class="error-note" *ngIf="errorMessage">{{ errorMessage }}</p>
+  <p class="success-note" *ngIf="successMessage">{{ successMessage }}</p>
+
+  <button class="submit-btn" [disabled]="loading" (click)="submit()">
+    <i class="ti" [ngClass]="loading ? 'ti-loader-2' : 'ti-arrow-right'"></i>
+    {{ mode === 'login' ? i18n.t('auth.login') : i18n.t('auth.register') }}
+  </button>
+
+  <p class="demo-hint">{{ i18n.t('auth.demoHint') }}</p>
+</div>

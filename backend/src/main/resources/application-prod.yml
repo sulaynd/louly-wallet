@@ -1,0 +1,6 @@
+# Activate with SPRING_PROFILES_ACTIVE=prod. Deliberately has NO default value for jwt.secret —
+# unlike application.yml's ${JWT_SECRET:-change-this-dev-only-secret...}, this profile fails
+# fast at startup if JWT_SECRET isn't set in the environment, so it's impossible to accidentally
+# deploy with the development placeholder secret.
+jwt:
+  secret: ${JWT_SECRET}

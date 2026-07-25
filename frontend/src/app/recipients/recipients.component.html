@@ -1,0 +1,120 @@
+<div class="header">
+  <button class="iconbtn" *ngIf="formStep === 'receptionMode'" (click)="cancelForm()" [attr.aria-label]="i18n.t('recipients.form.cancel')">
+    <i class="ti ti-arrow-left"></i>
+  </button>
+  <button class="iconbtn" *ngIf="formStep === 'details'" (click)="backToReceptionModeStep()" [attr.aria-label]="i18n.t('recipients.form.cancel')">
+    <i class="ti ti-arrow-left"></i>
+  </button>
+  <h1>
+    {{ formStep === 'receptionMode' ? i18n.t('recipients.form.selectReceptionMode')
+       : formStep === 'details' ? i18n.t('recipients.form.title')
+       : i18n.t('recipients.title') }}
+  </h1>
+  <div class="iconbtn"><i class="ti ti-search" *ngIf="formStep === 'closed'"></i></div>
+</div>
+
+<!-- STEP 1: country -> receptionMode chips -->
+<div class="add-form" *ngIf="formStep === 'receptionMode'">
+  <div class="field">
+    <select [(ngModel)]="formCountryName" name="formCountry" (ngModelChange)="onCountrySelected()">
+      <option value="" disabled>{{ i18n.t('auth.country') }}</option>
+      <option *ngFor="let c of countries" [value]="c.name">{{ c.flagEmoji }} {{ c.name }}</option>
+    </select>
+  </div>
+
+  <p class="empty-note" *ngIf="receptionModesLoading">{{ i18n.t('recipients.form.loadingReceptionModes') }}</p>
+
+  <ng-container *ngIf="!receptionModesLoading && formCountryName">
+    <p class="empty-note" *ngIf="receptionModes.length === 0">{{ i18n.t('recipients.form.noReceptionModes') }}</p>
+    <button class="reception-mode-row" *ngFor="let m of receptionModes" (click)="selectReceptionMode(m.name)">
+      <span class="reception-mode-icon"><i class="ti" [ngClass]="receptionModeIcon(m.name)"></i></span>
+      <span class="reception-mode-text">
+        <span class="reception-mode-name">{{ m.name }}</span>
+        <span class="reception-mode-desc">{{ receptionModeDescription(m) }}</span>
+      </span>
+      <i class="ti ti-chevron-right reception-mode-chevron"></i>
+    </button>
+  </ng-container>
+</div>
+
+<!-- STEP 2: rest of the recipient details -->
+<div class="add-form" *ngIf="formStep === 'details'">
+  <div class="field">
+    <input type="text" class="readonly-field" [value]="(selectedCountry?.flagEmoji ?? '') + ' ' + formCountryName" readonly [attr.aria-label]="i18n.t('auth.country')" />
+  </div>
+
+  <div class="field">
+    <input type="text" class="readonly-field" [value]="formReceptionModeName" readonly [attr.aria-label]="i18n.t('recipients.form.selectReceptionMode')" />
+  </div>
+
+  <div class="field">
+    <select [(ngModel)]="formDeliveryPartner" name="formDeliveryPartner">
+      <option value="" disabled>{{ i18n.t('recipients.form.deliveryPartner') }}</option>
+      <option *ngFor="let p of deliveryPartners" [value]="p.name">{{ p.name }}</option>
+    </select>
+  </div>
+
+  <div class="field">
+    <input type="text" [(ngModel)]="formName" name="formName" [placeholder]="i18n.t('recipients.form.name')" />
+  </div>
+
+  <div class="field">
+    <div class="phone-input-wrap">
+      <span class="calling-code">{{ callingCode }}</span>
+      <input type="tel" [(ngModel)]="formLocalPhone" name="formLocalPhone" [placeholder]="i18n.t('auth.phoneNumber')" />
+    </div>
+  </div>
+
+  <div class="field">
+    <input type="text" [(ngModel)]="formAddress" name="formAddress" [placeholder]="i18n.t('recipients.form.address')" />
+  </div>
+
+  <div class="field">
+    <input type="text" [(ngModel)]="formCity" name="formCity" [placeholder]="i18n.t('recipients.form.city')" />
+  </div>
+
+  <div class="field">
+    <input type="text" [(ngModel)]="formDetail" name="formDetail" [placeholder]="i18n.t('recipients.form.detail')" />
+  </div>
+
+  <p class="error-note" *ngIf="errorMessage">{{ errorMessage }}</p>
+
+  <button class="continue-btn" [disabled]="saving || !formValid" (click)="submit()">
+    <i class="ti" [ngClass]="saving ? 'ti-loader-2' : 'ti-check'"></i>
+    {{ saving ? i18n.t('recipients.form.saving') : i18n.t('recipients.form.save') }}
+  </button>
+  <button class="secondary-btn" [disabled]="saving" (click)="cancelForm()">
+    {{ i18n.t('recipients.form.cancel') }}
+  </button>
+</div>
+
+<!-- LIST -->
+<ng-container *ngIf="formStep === 'closed'">
+  <p class="empty-note" *ngIf="loading">{{ i18n.t('recipients.loading') }}</p>
+
+  <ng-container *ngIf="!loading">
+    <p class="section-title first">{{ i18n.t('recipients.national') }}</p>
+    <p class="empty-note" *ngIf="national.length === 0">{{ i18n.t('recipients.emptyNational') }}</p>
+    <div class="recipient" *ngFor="let r of national">
+      <div class="rflag">{{ r.flagEmoji }}</div>
+      <div class="rinfo">
+        <p class="n">{{ r.name }}</p>
+        <p class="d">{{ r.phoneNumber }} · {{ r.receptionModeName }}{{ r.detail ? ' · ' + r.detail : '' }}</p>
+      </div>
+      <span class="badge nat">{{ i18n.t('recipients.interac') }}</span>
+    </div>
+
+    <p class="section-title">{{ i18n.t('recipients.international') }}</p>
+    <p class="empty-note" *ngIf="international.length === 0">{{ i18n.t('recipients.emptyInternational') }}</p>
+    <div class="recipient" *ngFor="let r of international">
+      <div class="rflag">{{ r.flagEmoji }}</div>
+      <div class="rinfo">
+        <p class="n">{{ r.name }}</p>
+        <p class="d">{{ r.phoneNumber }} · {{ r.receptionModeName }}{{ r.detail ? ' · ' + r.detail : '' }}</p>
+      </div>
+      <span class="badge intl">{{ r.currencyCode }}</span>
+    </div>
+  </ng-container>
+
+  <button class="add-recipient" (click)="openForm()"><i class="ti ti-plus"></i> {{ i18n.t('recipients.add') }}</button>
+</ng-container>

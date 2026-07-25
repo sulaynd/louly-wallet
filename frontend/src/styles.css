@@ -1,0 +1,37 @@
+:root {
+  --bg: #f5f7fb;
+  --card: #ffffff;
+  --navy: #0e2a4d;
+  --navy-soft: #e7edf6;
+  --teal: #127a6b;
+  --teal-soft: #e1f1ee;
+  --amber: #f0a63a;
+  --ink: #101828;
+  --muted: #69738c;
+  --line: #e7e9f1;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+  background: #dce3f0;
+  font-family: 'Inter', sans-serif;
+  color: var(--ink);
+}
+
+h1,
+h2,
+h3 {
+  font-family: 'Sora', sans-serif;
+  margin: 0;
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+}

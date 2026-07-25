@@ -1,0 +1,36 @@
+# --- Backend (Java / Maven) ---
+backend/target/
+backend/.mvn/wrapper/maven-wrapper.jar
+*.class
+*.jar
+!**/lib/*.jar
+.mvn/timing.properties
+
+# --- Frontend (Angular / Node) ---
+frontend/node_modules/
+frontend/dist/
+frontend/.angular/
+frontend/npm-debug.log*
+frontend/yarn-error.log*
+
+# --- IDEs ---
+.idea/
+*.iml
+.vscode/
+.settings/
+.classpath
+.project
+
+# --- OS ---
+.DS_Store
+Thumbs.db
+
+# --- Secrets — never commit real values, only the .example templates ---
+.env
+.env.local
+*.env
+!*.env.example
+
+# --- Logs ---
+*.log
+logs/
