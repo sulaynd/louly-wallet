@@ -4,13 +4,14 @@ import { TransferService } from '../transfer.service';
 import { I18nService } from '../i18n.service';
 import { Transfer, TransferEvent } from '../models';
 import { decimalsForCurrency } from '../currency-utils';
+import { MoneyPipe } from '../money.pipe';
 
 type TrackView = 'list' | 'detail';
 
 @Component({
   selector: 'app-track',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, MoneyPipe],
   templateUrl: './track.component.html',
   styleUrl: './track.component.css',
 })

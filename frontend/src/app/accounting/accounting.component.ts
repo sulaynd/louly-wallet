@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AccountingService, AccountingSummary, ReceptionModeBalance, LedgerEntry } from '../accounting.service';
 import { I18nService } from '../i18n.service';
+import { MoneyPipe } from '../money.pipe';
 
 @Component({
   selector: 'app-accounting',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, MoneyPipe],
   templateUrl: './accounting.component.html',
   styleUrl: './accounting.component.css',
 })

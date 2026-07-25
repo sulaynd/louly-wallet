@@ -20,7 +20,7 @@
       <span class="d">{{ t.createdAt | date: 'mediumDate' }}</span>
     </span>
     <span class="history-amount">
-      <span class="val">{{ t.amountReceived | number: '1.' + decimalsForCurrency(t.targetCurrency) + '-' + decimalsForCurrency(t.targetCurrency) }} {{ t.targetCurrency }}</span>
+      <span class="val">{{ t.amountReceived | money: t.targetCurrency }}</span>
       <span class="status" [class.pending]="t.events[t.events.length - 1].pending">
         {{ t.events[t.events.length - 1].pending ? i18n.t('track.status.pending') : i18n.t('track.status.done') }}
       </span>
@@ -29,7 +29,7 @@
 
   <div class="total-sent-block" *ngIf="history.length > 0">
     <span class="total-sent-label">{{ i18n.t('track.totalSent') }}</span>
-    <span class="total-sent-value">{{ totalSent | currency: totalSentCurrency }}</span>
+    <span class="total-sent-value">{{ totalSent | money: totalSentCurrency }}</span>
   </div>
 </ng-container>
 
@@ -51,7 +51,7 @@
       <div class="route-flags">
         <span class="flag-sm">{{ t.recipient.flagEmoji }}</span>
       </div>
-      <p class="amt">{{ t.amountReceived | number: '1.' + decimalsForCurrency(t.targetCurrency) + '-' + decimalsForCurrency(t.targetCurrency) }} {{ t.targetCurrency }}</p>
+      <p class="amt">{{ t.amountReceived | money: t.targetCurrency }}</p>
       <p class="to">{{ i18n.t('track.to') }} {{ t.recipient.name }} · {{ t.recipient.phoneNumber }}</p>
       <span class="eta-pill">
         <i class="ti ti-clock"></i>

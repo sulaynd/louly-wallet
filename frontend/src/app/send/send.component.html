@@ -29,19 +29,19 @@
       <div class="tx-row" *ngFor="let t of displayedTransfers">
         <div class="tx-line">
           <span class="tx-name">{{ t.recipient.name }}</span>
-          <span class="tx-amount">{{ t.totalCharged | currency: t.sourceCurrency }}</span>
+          <span class="tx-amount">{{ t.totalCharged | money: t.sourceCurrency }}</span>
         </div>
         <div class="tx-line tx-line-sub">
           <span class="tx-date">{{ t.createdAt | date: 'd MMM' }}</span>
           <span class="tx-status">{{ statusLabel(t.status) }}</span>
-          <span class="tx-amount-sub">{{ t.amountReceived | number: '1.' + decimalsForCurrency(t.targetCurrency) + '-' + decimalsForCurrency(t.targetCurrency) }} {{ t.targetCurrency }}</span>
+          <span class="tx-amount-sub">{{ t.amountReceived | money: t.targetCurrency }}</span>
         </div>
       </div>
       <button class="view-all-btn" *ngIf="!showAllTransactions" (click)="goToAllTransactions()">{{ i18n.t('send.viewAllTransactions') }}</button>
 
       <div class="total-sent-block" *ngIf="showAllTransactions">
         <span class="total-sent-label">{{ i18n.t('send.totalSent') }}</span>
-        <span class="total-sent-value">{{ totalSent | currency: sourceCurrency }}</span>
+        <span class="total-sent-value">{{ totalSent | money: sourceCurrency }}</span>
       </div>
     </div>
 
@@ -100,7 +100,7 @@
           <i class="ti" [ngClass]="a.type === 'DEPOT' ? 'ti-wallet' : 'ti-credit-card'"></i>
           <span class="account-row-text">
             <span class="account-row-label">{{ a.type === 'DEPOT' ? i18n.t('send.depotAccount') : a.label }}</span>
-            <span class="account-row-balance" *ngIf="a.type === 'DEPOT' && a.balance !== null">{{ a.balance | currency: (a.currencyCode ?? sourceCurrency) }}</span>
+            <span class="account-row-balance" *ngIf="a.type === 'DEPOT' && a.balance !== null">{{ a.balance | money: (a.currencyCode ?? sourceCurrency) }}</span>
           </span>
           <i class="ti ti-circle-check account-row-check" *ngIf="selectedAccount?.id === a.id"></i>
         </button>
@@ -161,11 +161,11 @@
 
       <div class="fee-row">
         <span>{{ i18n.t('send.fee') }}</span>
-        <span>{{ fee | currency: sourceCurrency }}</span>
+        <span>{{ fee | money: sourceCurrency }}</span>
       </div>
       <div class="fee-row total">
         <span>{{ i18n.t('send.total') }}</span>
-        <span>{{ total | currency: sourceCurrency }}</span>
+        <span>{{ total | money: sourceCurrency }}</span>
       </div>
     </div>
 
@@ -200,11 +200,11 @@
       </div>
       <div class="amount-block">
         <span class="cur">{{ i18n.t('send.youSend') }}</span>
-        <span class="val">{{ amount | currency: sourceCurrency }}</span>
+        <span class="val">{{ amount | money: sourceCurrency }}</span>
       </div>
       <div class="amount-block">
         <span class="cur">{{ i18n.t('send.theyReceive') }}</span>
-        <span class="val">{{ receivedAmount | number: '1.' + receivedDecimals + '-' + receivedDecimals }} {{ recipient.currencyCode }}</span>
+        <span class="val">{{ receivedAmount | money: recipient.currencyCode }}</span>
       </div>
 
       <div class="rate-strip" *ngIf="isInternational">
@@ -213,11 +213,11 @@
 
       <div class="fee-row">
         <span>{{ i18n.t('send.fee') }}</span>
-        <span>{{ fee | currency: sourceCurrency }}</span>
+        <span>{{ fee | money: sourceCurrency }}</span>
       </div>
       <div class="fee-row total">
         <span>{{ i18n.t('send.total') }}</span>
-        <span>{{ total | currency: sourceCurrency }}</span>
+        <span>{{ total | money: sourceCurrency }}</span>
       </div>
     </div>
 
@@ -258,20 +258,20 @@
     </div>
     <div class="amount-block">
       <span class="cur">{{ i18n.t('send.confirm.sentLabel') }}</span>
-      <span class="val">{{ t.amountSent | currency: t.sourceCurrency }}</span>
+      <span class="val">{{ t.amountSent | money: t.sourceCurrency }}</span>
     </div>
     <div class="amount-block">
       <span class="cur">{{ i18n.t('send.confirm.receivedLabel') }}</span>
-      <span class="val">{{ t.amountReceived | number: '1.' + decimalsForCurrency(t.targetCurrency) + '-' + decimalsForCurrency(t.targetCurrency) }} {{ t.targetCurrency }}</span>
+      <span class="val">{{ t.amountReceived | money: t.targetCurrency }}</span>
     </div>
 
     <div class="fee-row">
       <span>{{ i18n.t('send.fee') }}</span>
-      <span>{{ t.fee | currency: t.sourceCurrency }}</span>
+      <span>{{ t.fee | money: t.sourceCurrency }}</span>
     </div>
     <div class="fee-row total">
       <span>{{ i18n.t('send.total') }}</span>
-      <span>{{ t.totalCharged | currency: t.sourceCurrency }}</span>
+      <span>{{ t.totalCharged | money: t.sourceCurrency }}</span>
     </div>
     <div class="fee-row">
       <span>{{ i18n.t('send.confirm.reference') }}</span>

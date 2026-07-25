@@ -9,11 +9,12 @@ import { AuthService } from '../auth.service';
 import { I18nService } from '../i18n.service';
 import { Recipient, Transfer, UserAccount } from '../models';
 import { decimalsForCurrency, roundForCurrency } from '../currency-utils';
+import { MoneyPipe } from '../money.pipe';
 
 @Component({
   selector: 'app-send',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, MoneyPipe],
   templateUrl: './send.component.html',
   styleUrl: './send.component.css',
 })
